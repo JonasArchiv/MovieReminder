@@ -27,6 +27,9 @@ def add_entry():
     title = input("Titel: ").strip()
     description = input("Beschreibung: ").strip()
 
+    tags = input("Tags (durch Kommas getrennt): ").strip().split(',')
+    tags = [tag.strip() for tag in tags]
+
     if entry_type == 'film':
         scenes = []
         while True:
@@ -37,7 +40,8 @@ def add_entry():
         data[title] = {
             'type': 'film',
             'description': description,
-            'scenes': scenes
+            'scenes': scenes,
+            'tags': tags
         }
     elif entry_type == 'serie':
         season = input("Staffel: ").strip()
@@ -57,7 +61,8 @@ def add_entry():
             data[title]['seasons'][season] = {}
         data[title]['seasons'][season][episode] = {
             'description': description,
-            'scenes': scenes
+            'scenes': scenes,
+            'tags': tags
         }
 
     save_data(data)
@@ -74,6 +79,9 @@ def edit_entry():
             print(f"Aktuelle Beschreibung: {entry['description']}")
             new_description = input("Neue Beschreibung: ").strip()
             entry['description'] = new_description
+            print("Aktuelle Tags:", ', '.join(entry.get('tags', [])))
+            new_tags = input("Neue Tags (durch Kommas getrennt): ").strip().split(',')
+            entry['tags'] = [tag.strip() for tag in new_tags]
             print("Aktuelle Szenen:")
             for i, scene in enumerate(entry['scenes']):
                 print(f"  {i + 1}. {scene}")
@@ -90,16 +98,20 @@ def edit_entry():
                 for episode, details in episodes.items():
                     print(f"    Folge {episode}")
                     print(f"      Beschreibung: {details['description']}")
+                    print("      Tags:", ', '.join(details.get('tags', [])))
                     print("      Szene(n):")
                     for scene in details['scenes']:
                         print(f"        - {scene}")
             season = input("Geben Sie die Staffel ein, die Sie bearbeiten möchten: ").strip()
             episode = input("Geben Sie die Folge ein, die Sie bearbeiten möchten: ").strip()
-            if season in entry['seasons'] and episode in entry['seasons'][season]:
-                episode_entry = entry['seasons'][season][episode]
+            if season in data[title]['seasons'] and episode in data[title]['seasons'][season]:
+                episode_entry = data[title]['seasons'][season][episode]
                 print(f"Aktuelle Beschreibung: {episode_entry['description']}")
                 new_description = input("Neue Beschreibung: ").strip()
                 episode_entry['description'] = new_description
+                print("Aktuelle Tags:", ', '.join(episode_entry.get('tags', [])))
+                new_tags = input("Neue Tags (durch Kommas getrennt): ").strip().split(',')
+                episode_entry['tags'] = [tag.strip() for tag in new_tags]
                 print("Aktuelle Szenen:")
                 for i, scene in enumerate(episode_entry['scenes']):
                     print(f"  {i + 1}. {scene}")
@@ -127,6 +139,7 @@ def retrieve_entry():
         if entry['type'] == 'film':
             print(f"Film: {title}")
             print(f"Beschreibung: {entry['description']}")
+            print("Tags:", ', '.join(entry.get('tags', [])))
             print("Szene(n):")
             for scene in entry['scenes']:
                 print(f"  - {scene}")
@@ -137,11 +150,43 @@ def retrieve_entry():
                 for episode, details in episodes.items():
                     print(f"    Folge {episode}")
                     print(f"      Beschreibung: {details['description']}")
+                    print("      Tags:", ', '.join(details.get('tags', [])))
                     print("      Szene(n):")
                     for scene in details['scenes']:
                         print(f"        - {scene}")
     else:
         print("Eintrag nicht gefunden.")
+
+
+def search_by_tag():
+    data = load_data()
+    tag = input("Geben Sie den Tag ein, nach dem Sie suchen möchten: ").strip()
+    found = False
+
+    for title, entry in data.items():
+        if entry['type'] == 'film':
+            if tag in entry.get('tags', []):
+                print(f"Film: {title}")
+                print(f"Beschreibung: {entry['description']}")
+                print("Tags:", ', '.join(entry.get('tags', [])))
+                print("Szene(n):")
+                for scene in entry['scenes']:
+                    print(f"  - {scene}")
+                found = True
+        elif entry['type'] == 'serie':
+            for season, episodes in entry['seasons'].items():
+                for episode, details in episodes.items():
+                    if tag in details.get('tags', []):
+                        print(f"Serie: {title}")
+                        print(f"  Staffel {season}, Folge {episode}")
+                        print(f"    Beschreibung: {details['description']}")
+                        print(f"    Tags:", ', '.join(details.get('tags', [])))
+                        print("    Szene(n):")
+                        for scene in details['scenes']:
+                            print(f"      - {scene}")
+                        found = True
+    if not found:
+        print("Kein Eintrag gefunden.")
 
 
 def main():
@@ -150,8 +195,9 @@ def main():
         print("1. Eintag hinzufügen")
         print("2. Abrufen")
         print("3. Bearbeiten")
-        print("4. Beenden")
-        choice = input("Wählen Sie eine Option (1/2/3/4): ").strip()
+        print("4. Nach Tags suchen")
+        print("5. Beenden")
+        choice = input("Wählen Sie eine Option (1/2/3/4/5): ").strip()
 
         if choice == '1':
             add_entry()
@@ -160,6 +206,8 @@ def main():
         elif choice == '3':
             edit_entry()
         elif choice == '4':
+            search_by_tag()
+        elif choice == '5':
             break
         else:
             print("Ungültige Auswahl. Bitte versuchen Sie es erneut.")
