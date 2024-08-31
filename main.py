@@ -118,3 +118,52 @@ def edit_entry():
         print("Eintrag nicht gefunden.")
 
 
+def retrieve_entry():
+    data = load_data()
+    title = input("Geben Sie den Titel des Films oder der Serie ein, den Sie abrufen möchten: ").strip()
+
+    if title in data:
+        entry = data[title]
+        if entry['type'] == 'film':
+            print(f"Film: {title}")
+            print(f"Beschreibung: {entry['description']}")
+            print("Szene(n):")
+            for scene in entry['scenes']:
+                print(f"  - {scene}")
+        elif entry['type'] == 'serie':
+            print(f"Serie: {title}")
+            for season, episodes in entry['seasons'].items():
+                print(f"  Staffel {season}:")
+                for episode, details in episodes.items():
+                    print(f"    Folge {episode}")
+                    print(f"      Beschreibung: {details['description']}")
+                    print("      Szene(n):")
+                    for scene in details['scenes']:
+                        print(f"        - {scene}")
+    else:
+        print("Eintrag nicht gefunden.")
+
+
+def main():
+    while True:
+        print("\nFilm Reminder")
+        print("1. Eintag hinzufügen")
+        print("2. Abrufen")
+        print("3. Bearbeiten")
+        print("4. Beenden")
+        choice = input("Wählen Sie eine Option (1/2/3/4): ").strip()
+
+        if choice == '1':
+            add_entry()
+        elif choice == '2':
+            retrieve_entry()
+        elif choice == '3':
+            edit_entry()
+        elif choice == '4':
+            break
+        else:
+            print("Ungültige Auswahl. Bitte versuchen Sie es erneut.")
+
+
+if __name__ == "__main__":
+    main()
